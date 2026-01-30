@@ -1,0 +1,1092 @@
+---
+title: "GML_POISSON_REBECA"
+author: "JJPG"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+# GENERACIÓN DE GML DE POISSON CON LOS CLÚSTERS:
+
+```{r}
+#Instalación de librerias
+library(dplyr)
+library(psych)
+library(corrplot)
+library(readxl)
+library(car)
+library(MuMIn)
+library(ggplot2)
+```
+
+Se trabajaran solamente con 3 escalas: 250, 500 y 1000 m. Se generaron puntos de pseudo-ausencia con la misma tasa de los puntos generados. Los objetivos son:
+
+1. Identificar las variables que más explican la probailidad de colisión (odds-ratio).
+2. Encontrar el GML más parsimonioso que explique la tasa de colisiones.
+
+El número de registros positivos son: n=62 para el grupo 1 y n=30 para el grupo 2. El total de datos es 125.
+
+# CORRELACIÓN Y SELECCIÓN DE VARIABLES POR MEDIO DE CORRELACIONES PARA EL GRUPO 1
+
+```{r}
+# 1. Establecer carpeta de trabajo:
+setwd("D:/PU_Javeriana/Ecologia/6to_Semestre_Tesis/Tesis/Carpeta_Trabajo/7.GML")
+getwd()
+```
+Se realizará una selección de variables. Se trabajaran sobre las clases de paisaje que los grupos de aves implementan para movilizarse sobre una matríz urbano-agrícola. Estás son las coberturas vegetales urbanas, los posques y zonas semiabiertas y los humedales y cuerpos de agua. Las variables seleccionadas son aquellas métricas de composición (PLAND y  y LPI) como de configuración (NP,DP y AREA_MN) de las clases de paisaje de interés. Se realizó una prueba de correlación para identificar aquellas variables que presentaran un alto grado de correlación (>70%).
+
+A continuación se realizó una prueba de correlaciones entre 12 variables paracada escala y evaluar si hay redundancia entre los datos. Como paso metodológico, se realizará una prueba de correlación con el código $corr.test()$ generando una matriz de coeficientes de correlación y $p-valores$. Las correlaciones serán realizadas con la prueba de Spearman. 
+Se realizó la correlación para las dos escalas (250 y 500 m).
+
+## Grupo 1 Variables para el búfer de 250 m
+
+```{r}
+# 2. Leer documento
+df250g1 <- read_excel("LandscapeMetrics_AllLevels_v9.xlsx", sheet = "250m_1_wide")
+
+# Selección de las variables morfológicas de interés:
+df_subset_250g1 <- df250g1 %>% select(ID_point, Rate_BWC, PLAND_1, PLAND_2, PLAND_4, PLAND_5, PD_1, PD_2, PD_4, PD_5, AREA_MN_1, AREA_MN_2, AREA_MN_4, AREA_MN_5)
+
+# Convertir hoja de trabajo en dataframe y establecer nombres de las especies como nombres de filas:
+data250g1 <- as.data.frame(df_subset_250g1)
+rownames(data250g1) <- data250g1[[1]]       # Establece la primera columna como nombres de filas
+data250g1 <- data250g1[ , -1]             
+data250g1
+```
+
+```{r}
+#1. Matríz de correlaciones entre los datos 250m:
+corrmatrix250g1 <-corr.test(data250g1, method = "spearman")
+cor_mat250g1 <-corrmatrix250g1$r
+
+jpeg("Matriz_Correlacion250g1.jpg", width = 1200, height = 1000, res = 150)
+corrplot(cor_mat250g1, method = "color", type = "upper", 
+         addCoef.col = "black", number.cex = 0.45,
+         tl.cex = 0.5, tl.col = "black")
+dev.off()
+
+```
+
+## Grupo 1 Variables para el búfer de 500 m
+
+```{r}
+# 2. Leer documento
+df500g1 <- read_excel("LandscapeMetrics_AllLevels_v9.xlsx", sheet = "500m_1_wide")
+
+# Selección de las variables morfológicas de interés:
+df_subset_500g1 <- df500g1 %>% select(ID_point, Rate_BWC, PLAND_1, PLAND_2, PLAND_4, PLAND_5, PD_1, PD_2, PD_4, PD_5, AREA_MN_1, AREA_MN_2, AREA_MN_4, AREA_MN_5)
+
+# Convertir hoja de trabajo en dataframe y establecer nombres de las especies como nombres de filas:
+data500g1 <- as.data.frame(df_subset_500g1)
+rownames(data500g1) <- data500g1[[1]]       # Establece la primera columna como nombres de filas
+data500g1 <- data500g1[ , -1]             
+data500g1
+```
+
+
+```{r}
+#1. Matríz de correlaciones entre los datos 500m del grupo 1:
+corrmatrix500g1<-corr.test(data500g1, method = "spearman")
+cor_mat500g1<-corrmatrix500g1$r 
+
+jpeg("Matriz_Correlacion500g1.jpg", width = 1200, height = 1000, res = 150)
+corrplot(cor_mat500g1, method = "color", type = "upper", 
+         addCoef.col = "black", number.cex = 0.45,
+         tl.cex = 0.5, tl.col = "black")
+dev.off()
+```
+
+
+## Grupo 1 Variables para el búfer de 1000 m
+
+```{r}
+# 2. Leer documento
+df1000g1 <- read_excel("LandscapeMetrics_AllLevels_v9.xlsx", sheet = "1000m_1_wide")
+
+# Selección de las variables morfológicas de interés:
+df_subset_1000g1 <- df1000g1 %>% select(ID_point, Rate_BWC, PLAND_1, PLAND_2, PLAND_4, PLAND_5, PD_1, PD_2, PD_4, PD_5, AREA_MN_1, AREA_MN_2, AREA_MN_4, AREA_MN_5)
+
+# Convertir hoja de trabajo en dataframe y establecer nombres de las especies como nombres de filas:
+data1000g1 <- as.data.frame(df_subset_1000g1)
+rownames(data1000g1) <- data1000g1[[1]]       # Establece la primera columna como nombres de filas
+data1000g1 <- data1000g1[ , -1]             
+data1000g1
+```
+
+```{r}
+#1. Matríz de correlaciones entre los datos 1000m:
+corrmatrix1000g1 <-corr.test(data1000g1, method = "spearman")
+cor_mat1000g1 <-corrmatrix1000g1$r 
+
+jpeg("Matriz_Correlacion1000g1.jpg", width = 1200, height = 1000, res = 150)
+corrplot(cor_mat1000g1, method = "color", type = "upper", 
+         addCoef.col = "black", number.cex = 0.45,
+         tl.cex = 0.5, tl.col = "black")
+dev.off()
+```
+Para el grupo 1 de aves se seleccionó siguientes variables para las escalas 250 a 500 m son: "PLAND_1","PLAND_2","PLAND_4","PLAND_5","PD_1","PD_2","PD_4"
+
+#GENERACIÓN DE MODELOS LINEALES GENERALIZADOS DE POISSON PARA EL GRUPO 1
+
+
+```{r}
+## GML POISSON FOR 250m SCALE OF GROUP 1
+
+# 1. Standardize predictors
+data250g1_std <- data250g1
+data250g1_std[, c("PLAND_1","PLAND_2","PLAND_4","PLAND_5","PD_1","PD_2","PD_4")] <-
+  scale(data250g1[, c("PLAND_1","PLAND_2","PLAND_4","PLAND_5","PD_1","PD_2","PD_4")])
+
+# 2. Fit global GLM (poisson)
+global_model_250g1 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2 + PLAND_4 + PLAND_5 + PD_1 + PD_2 + PD_4,
+                    data = data250g1_std, family = poisson(link = "log"))
+
+# 3. Check VIF
+vif(global_model_250g1)
+
+# We exclude highlly collineality variables, that is VIF > 5. That would mean that PLAND_2 will go fisrt for having the highest VIF.
+
+
+# 2. Run again the Fit global GLM (poisson)
+global_model_250g1 <- glm(Rate_BWC ~ PLAND_1 + PLAND_4 + PLAND_5 + PD_1 + PD_2 + PD_4,
+                    data = data250g1_std, family = poisson)
+
+vif(global_model_250g1)
+
+# 4. Dredge global model (AICc ranking)
+options(na.action = "na.fail")
+model_set_250g1 <- dredge(global_model_250g1)
+head(model_set_250g1)
+
+# 5. Select supported models (ΔAICc ≤ 2)
+best_set_250g1 <- get.models(model_set_250g1, subset = delta <= 2)
+
+# 6. Model averaging
+avg_250g1 <- model.avg(best_set_250g1)
+avg_250g1
+summary(avg_250g1)
+
+
+# 7. Relative importance (sum of weights)
+sw(avg_250g1)
+
+# 8. Extract averaged coefficients
+avg_coefs_250g1 <- summary(avg_250g1)$coefmat.subset
+
+# 9. Compute Incidence Rate Ratio (IRR) + 95% CI
+IRR_table_250g1 <- data.frame(
+  Variable = rownames(avg_coefs_250g1),
+  Estimate = avg_coefs_250g1[, "Estimate"],
+  LowerCI = avg_coefs_250g1[, "Estimate"] - 1.96 * avg_coefs_250g1[, "Adjusted SE"],
+  UpperCI = avg_coefs_250g1[, "Estimate"] + 1.96 * avg_coefs_250g1[, "Adjusted SE"]
+)
+IRR_table_250g1$IRR      <- exp(IRR_table_250g1$Estimate)
+IRR_table_250g1$IRR_low  <- exp(IRR_table_250g1$LowerCI)
+IRR_table_250g1$IRR_high <- exp(IRR_table_250g1$UpperCI)
+
+# 10. Merge with relative importance
+imp_250g1 <- sw(avg_250g1)
+imp_df_250g1 <- data.frame(
+  Variable = names(imp_250g1),
+  Importance = as.numeric(imp_250g1)
+)
+
+plot_data_250g1 <- merge(IRR_table_250g1, imp_df_250g1, by = "Variable")
+plot_data_250g1 <- plot_data_250g1[plot_data_250g1$Variable != "(Intercept)", ]
+
+# Annotate significance
+plot_data_250g1$Significant <- with(plot_data_250g1,
+                                    IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance
+plot_data_250g1$Shape <- ifelse(plot_data_250g1$Significant,
+                                "Significant", "Not significant")
+
+# Color by effect direction
+plot_data_250g1$EffectDirection <- ifelse(plot_data_250g1$IRR < 1,
+                                          "Protective", "Risk-enhancing")
+
+# Harmonize labels
+plot_data_250g1$Label <- factor(plot_data_250g1$Variable,
+                                levels = unique(plot_data_250g1$Variable))
+
+# 11. Forest plot
+ggplot(plot_data_250g1, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  scale_y_log10() +  # Log scale for IRR
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue", "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16, "Not significant" = 1)) +
+  labs(y = "Incidence Rate Ratio (IRR, 95% CI)",
+       x = "Predictor",
+       size = "Relative importance\n(sum of weights)",
+       color = "Effect direction",
+       shape = "Significance",
+       title = "Model-averaged IRRs with relative importance (250 m) Group 1") +
+  theme_minimal()
+
+```
+```{r}
+## GML POISSON FOR 500m SCALE OF GROUP 1
+
+# 1. Standardize predictors
+data500g1_std <- data500g1
+data500g1_std[, c("PLAND_1","PLAND_2","PLAND_4","PLAND_5","PD_1","PD_2","PD_4")] <-
+  scale(data500g1[, c("PLAND_1","PLAND_2","PLAND_4","PLAND_5","PD_1","PD_2","PD_4")])
+
+# 2. Fit global Poisson GLM
+global_model_500g1 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2 + PLAND_4 + PLAND_5 + PD_1 + PD_2 + PD_4,
+                          data = data500g1_std, family = poisson(link = "log"))
+
+# 3. Check VIF and exclude VIF > 5
+vif(global_model_500g1)
+
+# Drop PLAND_5 if VIF > 5
+global_model_500g1 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2 + PLAND_4 + PD_1 + PD_2 + PD_4,
+                          data = data500g1_std, family = poisson(link = "log"))
+
+vif(global_model_500g1)
+
+# 4. Model selection
+options(na.action = "na.fail")
+model_set_500g1 <- dredge(global_model_500g1)
+best_set_500g1 <- get.models(model_set_500g1, subset = delta <= 2)
+avg_500g1 <- model.avg(best_set_500g1)
+
+
+# 5. Extract IRR + CI
+avg_coefs_500g1 <- summary(avg_500g1)$coefmat.subset
+IRR_table_500g1 <- data.frame(
+  Variable = rownames(avg_coefs_500g1),
+  Estimate = avg_coefs_500g1[, "Estimate"],
+  LowerCI = avg_coefs_500g1[, "Estimate"] - 1.96 * avg_coefs_500g1[, "Adjusted SE"],
+  UpperCI = avg_coefs_500g1[, "Estimate"] + 1.96 * avg_coefs_500g1[, "Adjusted SE"]
+)
+IRR_table_500g1$IRR      <- exp(IRR_table_500g1$Estimate)
+IRR_table_500g1$IRR_low  <- exp(IRR_table_500g1$LowerCI)
+IRR_table_500g1$IRR_high <- exp(IRR_table_500g1$UpperCI)
+
+# 6. Merge with importance
+imp_500g1 <- sw(avg_500g1)
+imp_df_500g1 <- data.frame(Variable = names(imp_500g1), Importance = as.numeric(imp_500g1))
+plot_data_500g1 <- merge(IRR_table_500g1, imp_df_500g1, by = "Variable")
+plot_data_500g1 <- plot_data_500g1[plot_data_500g1$Variable != "(Intercept)", ]
+
+# 7. Forest plot
+
+# Annotate significance
+plot_data_500g1$Significant <- with(plot_data_500g1,
+                                    IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance
+plot_data_500g1$Shape <- ifelse(plot_data_500g1$Significant,
+                                "Significant", "Not significant")
+
+# Color by effect direction
+plot_data_500g1$EffectDirection <- ifelse(plot_data_500g1$IRR < 1,
+                                          "Protective", "Risk-enhancing")
+
+# Harmonize labels
+plot_data_500g1$Label <- factor(plot_data_500g1$Variable,
+                                levels = unique(plot_data_500g1$Variable))
+
+# 11. Forest plot
+ggplot(plot_data_500g1, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  scale_y_log10() +  # Log scale for IRR
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue", "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16, "Not significant" = 1)) +
+  labs(y = "Incidence Rate Ratio (IRR, 95% CI)",
+       x = "Predictor",
+       size = "Relative importance\n(sum of weights)",
+       color = "Effect direction",
+       shape = "Significance",
+       title = "Model-averaged IRRs with relative importance (500 m) Group 1") +
+  theme_minimal()
+
+```
+
+
+
+```{r}
+## GML POISSON FOR 1000m SCALE OF GROUP 1
+
+# 1. Standardize predictors
+data1000g1_std <- data1000g1
+data1000g1_std[, c("PLAND_1","PLAND_2","PLAND_4","PLAND_5","PD_1","PD_2","PD_4")] <-
+  scale(data1000g1[, c("PLAND_1","PLAND_2","PLAND_4","PLAND_5","PD_1","PD_2","PD_4")])
+
+# 2. Fit global Poisson GLM
+global_model_1000g1 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2 + PLAND_4 + PLAND_5 + PD_1 + PD_2 + PD_4,
+                           data = data1000g1_std, family = poisson(link = "log"))
+
+# 3. Check VIF and exclude VIF > 5
+vif(global_model_1000g1)
+
+# Drop of PLAND_5
+global_model_1000g1 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2 + PLAND_4 + PD_1 + PD_2 + PD_4,
+                           data = data1000g1_std, family = poisson(link = "log"))
+
+vif(global_model_1000g1)
+
+# 4. Model selection
+options(na.action = "na.fail")
+model_set_1000g1 <- dredge(global_model_1000g1)
+best_set_1000g1 <- get.models(model_set_1000g1, subset = delta <= 2)
+avg_1000g1 <- model.avg(best_set_1000g1)
+avg_1000g1
+
+
+# 5. Extract IRR + CI
+avg_coefs_1000g1 <- summary(avg_1000g1)$coefmat.subset
+IRR_table_1000g1 <- data.frame(
+  Variable = rownames(avg_coefs_1000g1),
+  Estimate = avg_coefs_1000g1[, "Estimate"],
+  LowerCI = avg_coefs_1000g1[, "Estimate"] - 1.96 * avg_coefs_1000g1[, "Adjusted SE"],
+  UpperCI = avg_coefs_1000g1[, "Estimate"] + 1.96 * avg_coefs_1000g1[, "Adjusted SE"]
+)
+IRR_table_1000g1$IRR      <- exp(IRR_table_1000g1$Estimate)
+IRR_table_1000g1$IRR_low  <- exp(IRR_table_1000g1$LowerCI)
+IRR_table_1000g1$IRR_high <- exp(IRR_table_1000g1$UpperCI)
+
+# 6. Merge with importance
+imp_1000g1 <- sw(avg_1000g1)
+imp_df_1000g1 <- data.frame(Variable = names(imp_1000g1), Importance = as.numeric(imp_1000g1))
+plot_data_1000g1 <- merge(IRR_table_1000g1, imp_df_1000g1, by = "Variable")
+plot_data_1000g1 <- plot_data_1000g1[plot_data_1000g1$Variable != "(Intercept)", ]
+
+# 7. Forest plot
+
+# Annotate significance
+plot_data_1000g1$Significant <- with(plot_data_1000g1,
+                                    IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance
+plot_data_1000g1$Shape <- ifelse(plot_data_1000g1$Significant,
+                                "Significant", "Not significant")
+
+# Color by effect direction
+plot_data_1000g1$EffectDirection <- ifelse(plot_data_1000g1$IRR < 1,
+                                          "Protective", "Risk-enhancing")
+
+# Harmonize labels
+plot_data_1000g1$Label <- factor(plot_data_1000g1$Variable,
+                                levels = unique(plot_data_1000g1$Variable))
+
+# 11. Forest plot
+ggplot(plot_data_1000g1, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  scale_y_log10() +  # Log scale for IRR
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue", "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16, "Not significant" = 1)) +
+  labs(y = "Incidence Rate Ratio (IRR, 95% CI)",
+       x = "Predictor",
+       size = "Relative importance\n(sum of weights)",
+       color = "Effect direction",
+       shape = "Significance",
+       title = "Model-averaged IRRs with relative importance (1000 m) Group 1") +
+  theme_minimal()
+
+```
+
+# All plots together for group 1
+
+```{r}
+# Add scale labels
+plot_data_250g1$Scale <- "250 m"
+plot_data_500g1$Scale <- "500 m"
+plot_data_1000g1$Scale <- "1000 m"
+
+# Combine datasets
+combined_plot_data <- rbind(plot_data_250g1, plot_data_500g1, plot_data_1000g1)
+
+# Remove duplicates (if any)
+combined_plot_data <- combined_plot_data[!duplicated(combined_plot_data), ]
+
+# Order scales
+combined_plot_data$Scale <- factor(combined_plot_data$Scale,
+                                   levels = c("250 m", "500 m", "1000 m"))
+
+# Annotate significance: CI does NOT cross OR = 1
+combined_plot_data$Significant <- with(combined_plot_data,
+                                       IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance
+combined_plot_data$Shape <- ifelse(combined_plot_data$Significant,
+                                   "Significant", "Not significant")
+
+# Color by effect direction
+combined_plot_data$EffectDirection <- ifelse(combined_plot_data$IRR < 1,
+                                             "Protective", "Risk-enhancing")
+
+# Harmonize variable labels across scales
+combined_plot_data$Label <- factor(combined_plot_data$Variable,
+                                   levels = unique(combined_plot_data$Variable))
+
+
+# Plot
+q<-ggplot(combined_plot_data, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  facet_wrap(~Scale, drop = FALSE) +
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue", "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16, "Not significant" = 1)) +
+  labs(y = "Incidence Rate Ratio (95% CI)",
+       x = "Predictor",
+       size = "Immportancia Relativa\n(sum of weights)",
+       color = "Dirección efectiva",
+       shape = "Significancia",
+       title = "Efectos de escala de las métricas del paisaje sobre tasa de reportes de G1") +
+  theme_minimal()
+
+q
+  
+# Export as JPEG
+ggsave("forest_plot_poisson_g1.jpeg", plot = q, width = 10, height = 7, dpi = 300)
+```
+
+
+```{r}
+# Define the master vector of variables in the order you want
+var_order <- c("PLAND_1","PD_1","PLAND_2","PD_2","PLAND_4","PD_4","PLAND_5")
+
+# Function to add missing variables with NA values
+add_missing_vars <- function(df, var_order, scale_name) {
+  # Which variables are missing?
+  missing_vars <- setdiff(var_order, df$Variable)
+  
+  if (length(missing_vars) > 0) {
+    # Create a template row with NA for all columns
+    template <- df[1, , drop = FALSE]
+    template[,] <- NA
+    
+    # Repeat template for each missing variable
+    add_rows <- template[rep(1, length(missing_vars)), ]
+    add_rows$Variable <- missing_vars
+    add_rows$Scale <- scale_name
+    
+    # Bind back
+    df <- rbind(df, add_rows)
+  }
+  df
+}
+
+# Add scale labels
+plot_data_250g1$Scale <- "250 m"
+plot_data_500g1$Scale <- "500 m"
+plot_data_1000g1$Scale <- "1000 m"
+
+# Pad missing variables
+plot_data_250g1 <- add_missing_vars(plot_data_250g1, var_order, "250 m")
+plot_data_500g1 <- add_missing_vars(plot_data_500g1, var_order, "500 m")
+plot_data_1000g1 <- add_missing_vars(plot_data_1000g1, var_order, "1000 m")
+
+# Combine datasets
+combined_plot_data_g1 <- rbind(plot_data_250g1, plot_data_500g1, plot_data_1000g1)
+
+# Remove duplicates (if any)
+combined_plot_data_g1 <- combined_plot_data_g1[!duplicated(combined_plot_data_g1), ]
+
+# Order scales
+combined_plot_data_g1$Scale <- factor(combined_plot_data_g1$Scale,
+                                      levels = c("250 m", "500 m", "1000 m"))
+
+# Annotate significance: CI does NOT cross OR = 1
+combined_plot_data_g1$Significant <- with(combined_plot_data_g1,
+                                          IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance, but keep "Missing"
+combined_plot_data_g1$Shape <- ifelse(is.na(combined_plot_data_g1$IRR),
+                                      "Missing",
+                                      ifelse(combined_plot_data_g1$Significant,
+                                             "Significant", "Not significant"))
+
+# Color by effect direction
+combined_plot_data_g1$EffectDirection <- ifelse(is.na(combined_plot_data_g1$IRR),
+                                                "Missing",
+                                                ifelse(combined_plot_data_g1$IRR < 1,
+                                                       "Protective", "Risk-enhancing"))
+
+# Harmonize variable labels across scales
+combined_plot_data_g1$Label <- factor(combined_plot_data_g1$Variable,
+                                      levels = var_order)
+
+# Plot
+q <- ggplot(combined_plot_data_g1, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  facet_wrap(~Scale, drop = FALSE) +
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue",
+                                "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16,
+                                "Not significant" = 1)) +  
+  labs(y = "Incidence Rate Ratio (95% CI)",
+       x = "Predictor",
+       size = "Immportancia Relativa\n(sum of weights)",
+       color = "Dirección efectiva",
+       shape = "Significancia",
+       title = "Efectos de escala de las métricas del paisaje sobre tasa de reportes de G1") +
+  theme_minimal()
+
+q
+
+# Export as JPEG
+ggsave("forest_plot_poisson_g1.jpeg", plot = q, width = 10, height = 7, dpi = 300)
+
+```
+
+
+# CORRELACIÓN Y SELECCIÓN DE VARIABLES POR MEDIO DE CORRELACIONES PARA EL GRUPO 2
+
+
+## Grupo 2 Variables para el búfer de 250 m
+
+```{r}
+# 2. Leer documento
+df250g2 <- read_excel("LandscapeMetrics_AllLevels_v9.xlsx", sheet = "250m_2_wide")
+
+# Selección de las variables morfológicas de interés:
+df_subset_250g2 <- df250g2 %>% select(ID_point, Rate_BWC, PLAND_1, PLAND_2, PLAND_4, PLAND_5, PD_1, PD_2, PD_4, PD_5, AREA_MN_1, AREA_MN_2, AREA_MN_4, AREA_MN_5)
+
+# Convertir hoja de trabajo en dataframe y establecer nombres de las especies como nombres de filas:
+data250g2 <- as.data.frame(df_subset_250g2)
+rownames(data250g2) <- data250g2[[1]]       # Establece la primera columna como nombres de filas
+data250g2 <- data250g2[ , -1]             
+data250g2
+```
+
+```{r}
+#Matríz de correlaciones entre los datos 250m del grupo 2:
+corrmatrix250g2 <-corr.test(data250g2, method = "spearman")
+cor_mat250g2 <-corrmatrix250g2$r 
+
+jpeg("Matriz_Correlacion250g2.jpg", width = 1200, height = 1000, res = 150)
+corrplot(cor_mat250g2, method = "color", type = "upper", 
+         addCoef.col = "black", number.cex = 0.45,
+         tl.cex = 0.5, tl.col = "black")
+dev.off()
+```
+
+
+## Grupo 2 Variables para el búfer de 500 m
+
+```{r}
+# 2. Leer documento
+df500g2 <- read_excel("LandscapeMetrics_AllLevels_v9.xlsx", sheet = "500m_2_wide")
+
+# Selección de las variables morfológicas de interés:
+df_subset_500g2 <- df500g2 %>% select(ID_point, Rate_BWC, PLAND_1, PLAND_2, PLAND_4, PLAND_5, PD_1, PD_2, PD_4, PD_5, AREA_MN_1, AREA_MN_2, AREA_MN_4, AREA_MN_5)
+
+# Convertir hoja de trabajo en dataframe y establecer nombres de las especies como nombres de filas:
+data500g2 <- as.data.frame(df_subset_500g2)
+rownames(data500g2) <- data500g2[[1]]       # Establece la primera columna como nombres de filas
+data500g2 <- data500g2[ , -1]             
+data500g2
+```
+
+
+```{r}
+# Matríz de correlaciones entre los datos 500m del grupo 2:
+corrmatrix500g2<-corr.test(data500g2, method = "spearman")
+cor_mat500g2<-corrmatrix500g2$r 
+
+jpeg("Matriz_Correlacion500g2.jpg", width = 1200, height = 1000, res = 150)
+corrplot(cor_mat500g2, method = "color", type = "upper", 
+         addCoef.col = "black", number.cex = 0.45,
+         tl.cex = 0.5, tl.col = "black")
+dev.off()
+```
+
+## Grupo 2 Variables para el búfer de 1000 m
+
+```{r}
+# 2. Leer documento
+df1000g2 <- read_excel("LandscapeMetrics_AllLevels_v9.xlsx", sheet = "1000m_2_wide")
+
+# Selección de las variables morfológicas de interés:
+df_subset_1000g2 <- df1000g2 %>% select(ID_point, Rate_BWC, PLAND_1, PLAND_2, PLAND_4, PLAND_5, PD_1, PD_2, PD_4, PD_5, AREA_MN_1, AREA_MN_2, AREA_MN_4, AREA_MN_5)
+
+# Convertir hoja de trabajo en dataframe y establecer nombres de las especies como nombres de filas:
+data1000g2 <- as.data.frame(df_subset_1000g2)
+rownames(data1000g2) <- data1000g2[[1]]       # Establece la primera columna como nombres de filas
+data1000g2 <- data1000g2[ , -1]             
+data1000g2
+```
+
+
+```{r}
+# Matríz de correlaciones entre los datos 1000m del grupo 2:
+corrmatrix1000g2<-corr.test(data1000g2, method = "spearman")
+cor_mat1000g2<-corrmatrix1000g2$r 
+
+jpeg("Matriz_Correlacion1000g2.jpg", width = 1200, height = 1000, res = 150)
+corrplot(cor_mat1000g2, method = "color", type = "upper", 
+         addCoef.col = "black", number.cex = 0.45,
+         tl.cex = 0.5, tl.col = "black")
+dev.off()
+```
+
+Para el grupo 2 de aves se seleccionó siguientes variables para ambas escalas (250m, 500m y 1000): PLAND_1, PLAND_2, PD_1, PD_2, PD_4 y PD_5. PLAND_4 y PLAND_5 son redundantes respecto a PD_4 y PD_5 especificamente. 
+
+
+# CORRELACIÓN Y SELECCIÓN DE VARIABLES POR MEDIO DE CORRELACIONES PARA EL GRUPO 2
+
+
+## Grupo 2 Variables para el búfer de 250 m
+
+```{r}
+## GML POISSON FOR 250m SCALE OF GROUP 2
+
+# 1. Standardize predictors
+data250g2_std <- data250g2
+data250g2_std[, c("PLAND_1","PLAND_2","PD_1","PD_2","PD_4","PD_5")] <-
+  scale(data250g2[, c("PLAND_1","PLAND_2","PD_1","PD_2","PD_4","PD_5")])
+
+# 2. Fit global Poisson GLM
+global_model_250g2 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2 + PD_1 + PD_2 + PD_4 + PD_5,
+                          data = data250g2_std, family = poisson(link = "log"))
+
+# 3. Check VIF and exclude VIF > 5
+vif(global_model_250g2)
+
+# Drop PLAND_2 and PLAND_5 if needed
+#global_model_250g2 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2 + PD_1 + PD_2 + PD_4,
+ #                         data = data250g2_std, family = poisson)
+
+# 4. Model selection
+options(na.action = "na.fail")
+model_set_250g2 <- dredge(global_model_250g2)
+best_set_250g2 <- get.models(model_set_250g2, subset = delta <= 2)
+avg_250g2 <- model.avg(best_set_250g2)
+avg_250g2
+
+# 5. Extract IRR + CI
+avg_coefs_250g2 <- summary(avg_250g2)$coefmat.subset
+IRR_table_250g2 <- data.frame(
+  Variable = rownames(avg_coefs_250g2),
+  Estimate = avg_coefs_250g2[, "Estimate"],
+  LowerCI = avg_coefs_250g2[, "Estimate"] - 1.96 * avg_coefs_250g2[, "Adjusted SE"],
+  UpperCI = avg_coefs_250g2[, "Estimate"] + 1.96 * avg_coefs_250g2[, "Adjusted SE"]
+)
+IRR_table_250g2$IRR      <- exp(IRR_table_250g2$Estimate)
+IRR_table_250g2$IRR_low  <- exp(IRR_table_250g2$LowerCI)
+IRR_table_250g2$IRR_high <- exp(IRR_table_250g2$UpperCI)
+
+# 6. Merge with importance
+imp_250g2 <- sw(avg_250g2)
+imp_df_250g2 <- data.frame(Variable = names(imp_250g2), Importance = as.numeric(imp_250g2))
+plot_data_250g2 <- merge(IRR_table_250g2, imp_df_250g2, by = "Variable")
+plot_data_250g2 <- plot_data_250g2[plot_data_250g2$Variable != "(Intercept)", ]
+
+# 7. Forest plot
+# Annotate significance
+plot_data_250g2$Significant <- with(plot_data_250g2,
+                                    IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance
+plot_data_250g2$Shape <- ifelse(plot_data_250g2$Significant,
+                                "Significant", "Not significant")
+
+# Color by effect direction
+plot_data_250g2$EffectDirection <- ifelse(plot_data_250g2$IRR < 1,
+                                          "Protective", "Risk-enhancing")
+
+# Harmonize labels
+plot_data_250g2$Label <- factor(plot_data_250g2$Variable,
+                                levels = unique(plot_data_250g2$Variable))
+
+# 11. Forest plot
+ggplot(plot_data_250g2, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  scale_y_log10() +  # Log scale for IRR
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue", "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16, "Not significant" = 1)) +
+  labs(y = "Incidence Rate Ratio (IRR, 95% CI)",
+       x = "Predictor",
+       size = "Relative importance\n(sum of weights)",
+       color = "Effect direction",
+       shape = "Significance",
+       title = "Model-averaged IRRs with relative importance (250 m) Group 2") +
+  theme_minimal()
+
+```
+
+## Grupo 2 Variables para el búfer de 500 m
+
+```{r}
+## GML POISSON FOR 500m SCALE OF GROUP 2
+
+# 1. Standardize predictors
+data500g2_std <- data500g2
+data500g2_std[, c("PLAND_1","PLAND_2","PD_1","PD_2","PD_4","PD_5")] <-
+  scale(data500g2[, c("PLAND_1","PLAND_2","PD_1","PD_2","PD_4","PD_5")])
+
+# 2. Fit global Poisson GLM
+global_model_500g2 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2 + PD_1 + PD_2 + PD_4 + PD_5,
+                          data = data500g2_std, family = poisson(link = "log"))
+
+# 3. Check VIF and exclude VIF > 5
+vif(global_model_500g2)
+
+#Drop PLAND_2
+#global_model_500g2 <- glm(Rate_BWC ~ PLAND_1 + PLAND_4 + PLAND_5 + PD_1 + PD_2,
+ #                         data = data500g2_std, family = poisson)
+
+#vif(global_model_500g2)
+
+# 4. Model selection
+options(na.action = "na.fail")
+model_set_500g2 <- dredge(global_model_500g2)
+best_set_500g2 <- get.models(model_set_500g2, subset = delta <= 2)
+avg_500g2 <- model.avg(best_set_500g2)
+avg_500g2
+
+# 5. Extract IRR + CI
+avg_coefs_500g2 <- summary(avg_500g2)$coefmat.subset
+IRR_table_500g2 <- data.frame(
+  Variable = rownames(avg_coefs_500g2),
+  Estimate = avg_coefs_500g2[, "Estimate"],
+  LowerCI = avg_coefs_500g2[, "Estimate"] - 1.96 * avg_coefs_500g2[, "Adjusted SE"],
+  UpperCI = avg_coefs_500g2[, "Estimate"] + 1.96 * avg_coefs_500g2[, "Adjusted SE"]
+)
+IRR_table_500g2$IRR      <- exp(IRR_table_500g2$Estimate)
+IRR_table_500g2$IRR_low  <- exp(IRR_table_500g2$LowerCI)
+IRR_table_500g2$IRR_high <- exp(IRR_table_500g2$UpperCI)
+
+# 6. Merge with importance
+imp_500g2 <- sw(avg_500g2)
+imp_df_500g2 <- data.frame(Variable = names(imp_500g2), Importance = as.numeric(imp_500g2))
+plot_data_500g2 <- merge(IRR_table_500g2, imp_df_500g2, by = "Variable")
+plot_data_500g2 <- plot_data_500g2[plot_data_500g2$Variable != "(Intercept)", ]
+
+# 7. Forest plot
+
+# Annotate significance
+plot_data_500g2$Significant <- with(plot_data_500g2,
+                                    IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance
+plot_data_500g2$Shape <- ifelse(plot_data_500g2$Significant,
+                                "Significant", "Not significant")
+
+# Color by effect direction
+plot_data_500g2$EffectDirection <- ifelse(plot_data_500g2$IRR < 1,
+                                          "Protective", "Risk-enhancing")
+
+# Harmonize labels
+plot_data_500g2$Label <- factor(plot_data_500g2$Variable,
+                                levels = unique(plot_data_500g2$Variable))
+
+# Plot
+ggplot(plot_data_500g2, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  scale_y_log10() +  # Log scale for IRR
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue", "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16, "Not significant" = 1)) +
+  labs(y = "Incidence Rate Ratio (IRR, 95% CI)",
+       x = "Predictor",
+       size = "Relative importance\n(sum of weights)",
+       color = "Effect direction",
+       shape = "Significance",
+       title = "Model-averaged IRRs with relative importance (500 m) Group 2") +
+  theme_minimal()
+```
+
+## Grupo 2 Variables para el búfer de 1000 m
+
+```{r}
+## GML POISSON FOR 1000m SCALE OF GROUP 2
+
+# 1. Standardize predictors
+data1000g2_std <- data1000g2
+data1000g2_std[, c("PLAND_1","PLAND_2","PD_1","PD_2","PD_4","PD_5")] <-
+  scale(data1000g2[, c("PLAND_1","PLAND_2","PLAND_4","PLAND_5","PD_1","PD_2","PD_4","PD_5")])
+
+# 2. Fit global Poisson GLM
+global_model_1000g2 <- glm(Rate_BWC ~ PLAND_1 + PLAND_2  + PD_1 + PD_2 + PD_4 + PD_5,
+                           data = data1000g2_std, family = poisson(link = "log"))
+
+# 3. Check VIF and exclude VIF > 5
+vif(global_model_1000g2)
+
+
+# 3. Drop PLAND_2
+
+global_model_1000g2 <- glm(Rate_BWC ~ PLAND_1 +  PD_1 + PD_2 + PD_4 + PD_5,
+                           data = data1000g2_std, family = poisson)
+
+vif(global_model_1000g2)
+
+# 4. Model selection
+options(na.action = "na.fail")
+model_set_1000g2 <- dredge(global_model_1000g2)
+best_set_1000g2 <- get.models(model_set_1000g2, subset = delta <= 2)
+avg_1000g2 <- model.avg(best_set_1000g2)
+avg_1000g2 
+
+# 5. Extract IRR + CI
+avg_coefs_1000g2 <- summary(avg_1000g2)$coefmat.subset
+IRR_table_1000g2 <- data.frame(
+  Variable = rownames(avg_coefs_1000g2),
+  Estimate = avg_coefs_1000g2[, "Estimate"],
+  LowerCI = avg_coefs_1000g2[, "Estimate"] - 1.96 * avg_coefs_1000g2[, "Adjusted SE"],
+  UpperCI = avg_coefs_1000g2[, "Estimate"] + 1.96 * avg_coefs_1000g2[, "Adjusted SE"]
+)
+IRR_table_1000g2$IRR      <- exp(IRR_table_1000g2$Estimate)
+IRR_table_1000g2$IRR_low  <- exp(IRR_table_1000g2$LowerCI)
+IRR_table_1000g2$IRR_high <- exp(IRR_table_1000g2$UpperCI)
+
+# 6. Merge with importance
+imp_1000g2 <- sw(avg_1000g2)
+imp_df_1000g2 <- data.frame(Variable = names(imp_1000g2), Importance = as.numeric(imp_1000g2))
+plot_data_1000g2 <- merge(IRR_table_1000g2, imp_df_1000g2, by = "Variable")
+plot_data_1000g2 <- plot_data_1000g2[plot_data_1000g2$Variable != "(Intercept)", ]
+
+
+# Annotate significance
+plot_data_1000g2$Significant <- with(plot_data_1000g2,
+                                    IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance
+plot_data_1000g2$Shape <- ifelse(plot_data_1000g2$Significant,
+                                "Significant", "Not significant")
+
+# Color by effect direction
+plot_data_1000g2$EffectDirection <- ifelse(plot_data_1000g2$IRR < 1,
+                                          "Protective", "Risk-enhancing")
+
+# Harmonize labels
+plot_data_1000g2$Label <- factor(plot_data_1000g2$Variable,
+                                levels = unique(plot_data_1000g2$Variable))
+
+# Plot
+ggplot(plot_data_1000g2, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  scale_y_log10() +  # Log scale for IRR
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue", "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16, "Not significant" = 1)) +
+  labs(y = "Incidence Rate Ratio (IRR, 95% CI)",
+       x = "Predictor",
+       size = "Relative importance\n(sum of weights)",
+       color = "Effect direction",
+       shape = "Significance",
+       title = "Model-averaged IRRs with relative importance (1000 m) Group 2") +
+  theme_minimal()
+
+```
+# All plots together for group 2
+
+```{r}
+# Add scale labels
+plot_data_250g2$Scale <- "250 m"
+plot_data_500g2$Scale <- "500 m"
+plot_data_1000g2$Scale <- "1000 m"
+
+# Combine datasets
+combined_plot_data2 <- rbind(plot_data_250g2, plot_data_500g2, plot_data_1000g2)
+
+# Remove duplicates (if any)
+combined_plot_data2 <- combined_plot_data2[!duplicated(combined_plot_data2), ]
+
+# Order scales
+combined_plot_data2$Scale <- factor(combined_plot_data2$Scale,
+                                   levels = c("250 m", "500 m", "1000 m"))
+
+# Annotate significance: CI does NOT cross OR = 1
+combined_plot_data2$Significant <- with(combined_plot_data2,
+                                       IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance
+combined_plot_data2$Shape <- ifelse(combined_plot_data2$Significant,
+                                   "Significant", "Not significant")
+
+# Color by effect direction
+combined_plot_data2$EffectDirection <- ifelse(combined_plot_data2$IRR < 1,
+                                             "Protective", "Risk-enhancing")
+
+# Harmonize variable labels across scales
+combined_plot_data2$Label <- factor(combined_plot_data2$Variable,
+                                   levels = unique(combined_plot_data2$Variable))
+
+
+# Plot
+v<-ggplot(combined_plot_data2, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  facet_wrap(~Scale, drop = FALSE) +
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue", "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16, "Not significant" = 1)) +
+  labs(y = "Incidence Rate Ratio (95% CI)",
+       x = "Predictor",
+       size = "Immportancia Relativa\n(sum of weights)",
+       color = "Dirección efectiva",
+       shape = "Significancia",
+       title = "Efectos de escala de las métricas del paisaje sobre tasa de reportes de G2") +
+  theme_minimal()
+
+v
+  
+# Export as JPEG
+ggsave("forest_plot_poisson_g2.jpeg", plot = v, width = 10, height = 7, dpi = 300)
+
+```
+
+
+```{r}
+# Define the master vector of variables in the order you want
+var_order <- c("PLAND_1","PD_1","PLAND_2","PD_2", "PD_4", "PD_5")
+
+# Function to add missing variables with NA values
+add_missing_vars <- function(df, var_order, scale_name) {
+  # Which variables are missing?
+  missing_vars <- setdiff(var_order, df$Variable)
+  
+  if (length(missing_vars) > 0) {
+    # Create a template row with NA for all columns
+    template <- df[1, , drop = FALSE]
+    template[,] <- NA
+    
+    # Repeat template for each missing variable
+    add_rows <- template[rep(1, length(missing_vars)), ]
+    add_rows$Variable <- missing_vars
+    add_rows$Scale <- scale_name
+    
+    # Bind back
+    df <- rbind(df, add_rows)
+  }
+  df
+}
+
+# Add scale labels
+plot_data_250g2$Scale <- "250 m"
+plot_data_500g2$Scale <- "500 m"
+plot_data_1000g2$Scale <- "1000 m"
+
+# Pad missing variables
+plot_data_250g2 <- add_missing_vars(plot_data_250g2, var_order, "250 m")
+plot_data_500g2 <- add_missing_vars(plot_data_500g2, var_order, "500 m")
+plot_data_1000g2 <- add_missing_vars(plot_data_1000g2, var_order, "1000 m")
+
+# Combine datasets
+combined_plot_data_g2 <- rbind(plot_data_250g2, plot_data_500g2, plot_data_1000g2)
+
+# Remove duplicates (if any)
+combined_plot_data_g2 <- combined_plot_data_g2[!duplicated(combined_plot_data_g2), ]
+
+# Order scales
+combined_plot_data_g2$Scale <- factor(combined_plot_data_g2$Scale,
+                                      levels = c("250 m", "500 m", "1000 m"))
+
+# Annotate significance: CI does NOT cross OR = 1
+combined_plot_data_g2$Significant <- with(combined_plot_data_g2,
+                                          IRR_low > 1 | IRR_high < 1)
+
+# Assign shape based on significance, but keep "Missing"
+combined_plot_data_g2$Shape <- ifelse(is.na(combined_plot_data_g2$IRR),
+                                      "Missing",
+                                      ifelse(combined_plot_data_g2$Significant,
+                                             "Significant", "Not significant"))
+
+# Color by effect direction
+combined_plot_data_g2$EffectDirection <- ifelse(is.na(combined_plot_data_g2$IRR),
+                                                "Missing",
+                                                ifelse(combined_plot_data_g2$IRR < 1,
+                                                       "Protective", "Risk-enhancing"))
+
+# Harmonize variable labels across scales
+combined_plot_data_g2$Label <- factor(combined_plot_data_g2$Variable,
+                                      levels = var_order)
+
+# Plot
+v <- ggplot(combined_plot_data_g2, aes(x = Label, y = IRR)) +
+  geom_point(aes(size = Importance, color = EffectDirection, shape = Shape), na.rm = TRUE) +
+  geom_errorbar(aes(ymin = IRR_low, ymax = IRR_high), width = 0.2, color = "gray40", na.rm = TRUE) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "black") +
+  coord_flip() +
+  facet_wrap(~Scale, drop = FALSE) +
+  scale_size_continuous(range = c(3, 8)) +
+  scale_color_manual(values = c("Protective" = "steelblue",
+                                "Risk-enhancing" = "firebrick")) +
+  scale_shape_manual(values = c("Significant" = 16,
+                                "Not significant" = 1)) +  # "x" for missing
+  labs(y = "Incidence Rate Ratio (95% CI)",
+       x = "Predictor",
+       size = "Importancia Relativa\n(sum of weights)",
+       color = "Dirección efectiva",
+       shape = "Significancia",
+       title = "Efectos de escala de las métricas del paisaje sobre tasa de reportes de G2") +
+  theme_minimal()
+
+v
+
+# Export as JPEG
+ggsave("forest_plot_poisson_g2.jpeg", plot = v, width = 10, height = 7, dpi = 300)
+
+```
+
+
+```{r}
+### Generar las tablas de los mejores modelos generados:
+library(dplyr)
+
+extract_poisson_models <- function(model_set, scale_name, group_name) {
+  best_models <- subset(model_set, delta <= 2)
+  df <- as.data.frame(best_models)
+  df$Scale <- scale_name
+  df$Group <- group_name
+  return(df)
+}
+
+# Group 1
+poisson_models_g1 <- bind_rows(
+  extract_poisson_models(model_set_250g1, "250 m", "Group 1"),
+  extract_poisson_models(model_set_500g1, "500 m", "Group 1"),
+  extract_poisson_models(model_set_1000g1, "1000 m", "Group 1")
+)
+
+# Group 2
+poisson_models_g2 <- bind_rows(
+  extract_poisson_models(model_set_250g2, "250 m", "Group 2"),
+  extract_poisson_models(model_set_500g2, "500 m", "Group 2"),
+  extract_poisson_models(model_set_1000g2, "1000 m", "Group 2")
+)
+
+# Combine both groups safely
+poisson_models_all <- bind_rows(poisson_models_g1, poisson_models_g2)
+
+write.csv(poisson_models_all, "best_poisson_models_all.csv", row.names = FALSE)
+```
+
+
+
